@@ -3,6 +3,11 @@ import { Table } from '@finos/perspective';
 import { ServerRespond } from './DataStreamer';
 import './Graph.css';
 
+/* 
+- Graph.tsx renders graph component in App
+- reacts to state changes
+*/
+
 /**
  * Props declaration for <Graph />
  */
@@ -12,9 +17,10 @@ interface IProps {
 
 /**
  * Perspective library adds load to HTMLElement prototype.
- * This interface acts as a wrapper for Typescript compiler.
+ * This interface acts as a wrapper for Typescript compiler 
+ * and enables it to behave like an HTMLElement
  */
-interface PerspectiveViewerElement {
+interface PerspectiveViewerElement extends HTMLElement{
   load: (table: Table) => void,
 }
 
@@ -32,7 +38,9 @@ class Graph extends Component<IProps, {}> {
 
   componentDidMount() {
     // Get element to attach the table from the DOM.
-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+    // runs after component output has been rendered to DOM
+
+    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
 
     const schema = {
       stock: 'string',
@@ -49,6 +57,16 @@ class Graph extends Component<IProps, {}> {
 
       // Add more Perspective configurations here.
       elem.load(this.table);
+      elem.setAttribute('view', 'y_line');  // use y_line for continuous graph
+      elem.setAttribute('column-pivots', '["stock"]'); // distinguish ABC from DEF
+      elem.setAttribute('row-pivots', '["timestamp"]'); // map each datapoint based on timestamp 
+      elem.setAttribute('columns', '["top_ask_price"]'); // focus on specific part of data along y-axis
+      elem.setAttribute('aggregates', `
+        {"stock": "distinct count", 
+        "top_ask_price":"avg", 
+        "top_bid_price": "avg", 
+        "timestamp": "distinct count"}`
+      );      
     }
   }
 
